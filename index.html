@@ -6,7 +6,7 @@
   <title>Minesweeper</title>
   <style>
     :root {
-      --cell-size: 36px;
+      --cell-size: 32px; /* 90% of 36px */
       --bg-color: #0f172a;
       --card-bg: rgba(30, 41, 59, 0.85);
       --border-color: rgba(255, 255, 255, 0.1);
@@ -33,32 +33,32 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      padding: 16px 8px;
+      padding: 12px 8px;
       overflow-x: hidden;
     }
 
-    /* Top Navigation & Status Bar */
+    /* Top Navigation & Status Bar (Compact ~90%) */
     .top-nav {
       width: 100%;
-      max-width: 900px;
+      max-width: 810px;
       background: var(--card-bg);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--border-color);
-      border-radius: 18px;
-      padding: 10px 20px;
+      border-radius: 14px;
+      padding: 7px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-      margin-bottom: 20px;
+      gap: 12px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+      margin-bottom: 14px;
     }
 
     .nav-left {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
     }
 
@@ -66,10 +66,10 @@
       background: rgba(15, 23, 42, 0.7);
       border: 1px solid rgba(255, 255, 255, 0.12);
       color: #94a3b8;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
-      padding: 7px 14px;
-      border-radius: 20px;
+      padding: 5px 12px;
+      border-radius: 16px;
       cursor: pointer;
       transition: all 0.2s ease;
       white-space: nowrap;
@@ -85,49 +85,49 @@
       color: #fff;
       background: #0284c7;
       border-color: var(--accent);
-      box-shadow: 0 0 14px rgba(56, 189, 248, 0.45);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.45);
     }
 
     /* Status Panel (Mines, Face, Timer) */
     .status-panel {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
     }
 
     .stat-box {
       font-family: 'Courier New', Courier, monospace;
-      font-size: 24px;
+      font-size: 21px;
       font-weight: 800;
       color: var(--accent);
       background: rgba(0, 0, 0, 0.5);
-      padding: 4px 12px;
-      border-radius: 8px;
-      min-width: 72px;
+      padding: 3px 9px;
+      border-radius: 6px;
+      min-width: 64px;
       text-align: center;
       border: 1px solid rgba(56, 189, 248, 0.25);
-      text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+      text-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
     }
 
     .reset-btn {
       background: #1e293b;
       border: 2px solid #475569;
-      font-size: 28px;
+      font-size: 24px;
       cursor: pointer;
       border-radius: 50%;
-      width: 48px;
-      height: 48px;
+      width: 42px;
+      height: 42px;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.15s ease;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
     }
 
     .reset-btn:hover {
-      transform: scale(1.1);
+      transform: scale(1.08);
       border-color: var(--accent);
-      box-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
     }
 
     .reset-btn:active {
@@ -138,21 +138,21 @@
     .board-container {
       max-width: 100%;
       overflow: auto;
-      padding: 8px;
+      padding: 6px;
       display: flex;
       justify-content: center;
       align-items: center;
-      border-radius: 16px;
+      border-radius: 12px;
     }
 
     .board {
       display: grid;
       gap: 2px;
       background: #090e17;
-      padding: 6px;
-      border-radius: 12px;
+      padding: 5px;
+      border-radius: 10px;
       border: 2px solid rgba(56, 189, 248, 0.3);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.6);
       touch-action: manipulation;
     }
 
@@ -161,23 +161,26 @@
       width: var(--cell-size);
       height: var(--cell-size);
       background: var(--tile-unopened);
-      border-radius: 4px;
+      border-radius: 3px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 800;
       cursor: pointer;
       box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.25), inset -1px -1px 0 rgba(0, 0, 0, 0.4);
-      transition: background 0.1s, transform 0.05s;
+      transition: background 0.08s, transform 0.05s, outline 0.08s;
+      outline: none;
     }
 
-    .cell:hover:not(.opened):not(.flagged) {
+    .cell:hover:not(.opened) {
       background: var(--tile-unopened-hover);
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
     }
 
     .cell:active:not(.opened):not(.flagged) {
-      transform: scale(0.96);
+      transform: scale(0.95);
     }
 
     .cell.opened {
@@ -188,12 +191,12 @@
 
     .cell.flagged {
       color: #ef4444;
-      font-size: 18px;
+      font-size: 16px;
     }
 
     .cell.mine {
       background: #1e293b;
-      font-size: 18px;
+      font-size: 16px;
     }
 
     .cell.hit {
@@ -207,53 +210,60 @@
     }
 
     /* Number Colors */
-    .cell[data-num="1"] { color: #38bdf8; text-shadow: 0 0 6px rgba(56, 189, 248, 0.4); }
-    .cell[data-num="2"] { color: #4ade80; text-shadow: 0 0 6px rgba(74, 222, 128, 0.4); }
-    .cell[data-num="3"] { color: #f87171; text-shadow: 0 0 6px rgba(248, 113, 113, 0.4); }
-    .cell[data-num="4"] { color: #818cf8; text-shadow: 0 0 6px rgba(129, 140, 248, 0.4); }
-    .cell[data-num="5"] { color: #fb923c; text-shadow: 0 0 6px rgba(251, 146, 60, 0.4); }
-    .cell[data-num="6"] { color: #2dd4bf; text-shadow: 0 0 6px rgba(45, 212, 191, 0.4); }
-    .cell[data-num="7"] { color: #e879f9; text-shadow: 0 0 6px rgba(232, 121, 249, 0.4); }
-    .cell[data-num="8"] { color: #cbd5e1; text-shadow: 0 0 6px rgba(203, 213, 225, 0.4); }
+    .cell[data-num="1"] { color: #38bdf8; text-shadow: 0 0 5px rgba(56, 189, 248, 0.4); }
+    .cell[data-num="2"] { color: #4ade80; text-shadow: 0 0 5px rgba(74, 222, 128, 0.4); }
+    .cell[data-num="3"] { color: #f87171; text-shadow: 0 0 5px rgba(248, 113, 113, 0.4); }
+    .cell[data-num="4"] { color: #818cf8; text-shadow: 0 0 5px rgba(129, 140, 248, 0.4); }
+    .cell[data-num="5"] { color: #fb923c; text-shadow: 0 0 5px rgba(251, 146, 60, 0.4); }
+    .cell[data-num="6"] { color: #2dd4bf; text-shadow: 0 0 5px rgba(45, 212, 191, 0.4); }
+    .cell[data-num="7"] { color: #e879f9; text-shadow: 0 0 5px rgba(232, 121, 249, 0.4); }
+    .cell[data-num="8"] { color: #cbd5e1; text-shadow: 0 0 5px rgba(203, 213, 225, 0.4); }
 
     /* Footer & Controls Guide */
     footer {
-      margin-top: 24px;
+      margin-top: 16px;
       background: rgba(15, 23, 42, 0.6);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
-      padding: 8px 18px;
-      font-size: 13px;
+      border-radius: 10px;
+      padding: 6px 14px;
+      font-size: 12px;
       color: #94a3b8;
       display: flex;
-      gap: 16px;
+      gap: 14px;
       flex-wrap: wrap;
       justify-content: center;
     }
 
     .badge {
       background: rgba(255, 255, 255, 0.1);
-      padding: 2px 6px;
+      padding: 2px 5px;
       border-radius: 4px;
       color: #e2e8f0;
+      font-weight: 700;
+    }
+
+    .badge-key {
+      background: #0284c7;
+      color: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
     }
 
     /* Mobile mode toggle (Dig vs Flag) */
     .mobile-mode-toggle {
       display: none;
-      margin-top: 14px;
+      margin-top: 10px;
       background: rgba(15, 23, 42, 0.85);
       border: 2px solid var(--accent);
       border-radius: 50px;
-      padding: 4px 10px;
+      padding: 4px 8px;
       gap: 6px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
     }
 
     .mode-option {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
-      padding: 6px 14px;
+      padding: 5px 12px;
       border-radius: 30px;
       cursor: pointer;
       opacity: 0.55;
@@ -269,17 +279,17 @@
     /* Toast Notification */
     #toast {
       position: fixed;
-      top: 85px;
+      top: 75px;
       left: 50%;
       transform: translateX(-50%) translateY(-20px);
       background: rgba(15, 23, 42, 0.95);
       border: 1px solid var(--accent);
-      box-shadow: 0 8px 24px rgba(56, 189, 248, 0.35);
+      box-shadow: 0 6px 20px rgba(56, 189, 248, 0.35);
       color: #fff;
-      padding: 8px 20px;
-      border-radius: 20px;
+      padding: 7px 18px;
+      border-radius: 18px;
       font-weight: 700;
-      font-size: 14px;
+      font-size: 13.5px;
       opacity: 0;
       pointer-events: none;
       transition: all 0.3s ease;
@@ -301,8 +311,8 @@
     @media (max-width: 860px) {
       .top-nav {
         flex-direction: column;
-        gap: 12px;
-        padding: 10px 14px;
+        gap: 10px;
+        padding: 8px 12px;
       }
       .nav-left {
         justify-content: center;
@@ -317,22 +327,22 @@
         display: none;
       }
       :root {
-        --cell-size: 30px;
+        --cell-size: 27px;
       }
     }
 
     @media (max-width: 480px) {
       :root {
-        --cell-size: 26px;
+        --cell-size: 23px;
       }
       .stat-box {
-        font-size: 20px;
-        min-width: 60px;
-        padding: 2px 6px;
+        font-size: 18px;
+        min-width: 54px;
+        padding: 2px 5px;
       }
       .btn-pill {
         font-size: 11px;
-        padding: 5px 10px;
+        padding: 4px 8px;
       }
     }
   </style>
@@ -369,9 +379,9 @@
 
   <!-- Footer Guide -->
   <footer>
-    <div>🖱️ <span class="badge">左クリック</span> 掘る</div>
-    <div>🚩 <span class="badge">右クリック</span> 旗を立てる / 解除</div>
-    <div>⚡ <span class="badge">数字クリック</span> 周囲を一括オープン（旗の数が一致時）</div>
+    <div>🖱️ <span class="badge">左クリック</span> / ⌨️ <span class="badge badge-key">N</span> 掘る</div>
+    <div>🚩 <span class="badge">右クリック</span> / ⌨️ <span class="badge badge-key">M</span> 旗を立てる</div>
+    <div>⚡ <span class="badge">数字クリック</span> 周囲を一括オープン</div>
   </footer>
 
   <div id="toast"></div>
@@ -400,6 +410,9 @@
     let timeElapsed = 0;
     let mobileMode = 'dig'; // 'dig' or 'flag'
 
+    // Hovered cell tracking for keyboard shortcuts (N: Dig, M: Flag)
+    let hoveredCell = null;
+
     // Touch long-press handling
     let touchTimer = null;
     let touchPreventClick = false;
@@ -408,7 +421,31 @@
     function init() {
       // Prevent context menu on board
       document.getElementById('board').addEventListener('contextmenu', (e) => e.preventDefault());
+
+      // Global keyboard shortcut listeners (N: Dig, M: Flag)
+      window.addEventListener('keydown', onKeyDown);
+
       startNewGame();
+    }
+
+    // Keyboard controls: N = Reveal/Dig, M = Flag
+    function onKeyDown(e) {
+      // Ignore when typing in an input field (if any added in future)
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+      const key = e.key.toLowerCase();
+      if (key === 'n') {
+        if (hoveredCell) {
+          revealCell(hoveredCell.r, hoveredCell.c);
+        }
+      } else if (key === 'm') {
+        if (hoveredCell) {
+          toggleFlag(hoveredCell.r, hoveredCell.c);
+        }
+      } else if (key === 'r') {
+        // Bonus shortcut: R = Restart
+        startNewGame();
+      }
     }
 
     function setDifficulty(diff) {
@@ -441,6 +478,7 @@
       gameWon = false;
       flaggedCount = 0;
       revealedCount = 0;
+      hoveredCell = null;
       updateMineDisplay();
       setFace('😊');
 
@@ -472,12 +510,25 @@
           cellEl.dataset.r = r;
           cellEl.dataset.c = c;
 
+          // Track hover for Keyboard Shortcuts (N / M)
+          cellEl.addEventListener('mouseenter', () => {
+            hoveredCell = { r, c };
+          });
+          cellEl.addEventListener('mouseleave', () => {
+            if (hoveredCell && hoveredCell.r === r && hoveredCell.c === c) {
+              hoveredCell = null;
+            }
+          });
+
           // Mouse Listeners
           cellEl.addEventListener('mousedown', (e) => onCellMouseDown(e, r, c));
           cellEl.addEventListener('mouseup', (e) => onCellMouseUp(e, r, c));
 
           // Touch Listeners (Mobile friendly long press for flag)
-          cellEl.addEventListener('touchstart', (e) => onCellTouchStart(e, r, c), { passive: true });
+          cellEl.addEventListener('touchstart', (e) => {
+            hoveredCell = { r, c };
+            onCellTouchStart(e, r, c);
+          }, { passive: true });
           cellEl.addEventListener('touchend', (e) => onCellTouchEnd(e, r, c));
 
           boardEl.appendChild(cellEl);
@@ -485,7 +536,7 @@
       }
 
       const modeName = currentDifficulty === 'easy' ? '初級' : currentDifficulty === 'medium' ? '中級' : '上級 (💣99)';
-      showToast(`${modeName} スタート！マスをクリック`);
+      showToast(`${modeName} スタート！ [N] 掘る / [M] 旗`);
     }
 
     // Place mines with safe 3x3 zone around initial click
