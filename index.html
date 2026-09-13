@@ -43,50 +43,67 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 16px;
+      padding: 12px 16px;
     }
 
     .interactive {
       pointer-events: auto;
     }
 
-    /* Header Bar */
-    header {
-      align-self: center;
-      background: rgba(15, 23, 42, 0.75);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
-      padding: 10px 24px;
+    /* Top Navigation Bar: 盤面と被らないよう上端に集約 */
+    .top-nav {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      padding: 8px 18px;
       display: flex;
       align-items: center;
-      gap: 20px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      justify-content: space-between;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      gap: 12px;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Status Panel (Mines, Face, Timer) */
+    .status-panel {
+      display: flex;
+      align-items: center;
+      gap: 14px;
     }
 
     .stat-box {
       font-family: 'Courier New', Courier, monospace;
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 800;
       color: #38bdf8;
-      background: rgba(0, 0, 0, 0.4);
-      padding: 4px 12px;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 4px 10px;
       border-radius: 8px;
-      min-width: 75px;
+      min-width: 72px;
       text-align: center;
-      border: 1px solid rgba(56, 189, 248, 0.2);
+      border: 1px solid rgba(56, 189, 248, 0.25);
       text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
     }
 
     .reset-btn {
       background: #1e293b;
       border: 2px solid #475569;
-      font-size: 28px;
+      font-size: 26px;
       cursor: pointer;
       border-radius: 50%;
-      width: 50px;
-      height: 50px;
+      width: 44px;
+      height: 44px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -95,7 +112,7 @@
     }
 
     .reset-btn:hover {
-      transform: scale(1.08);
+      transform: scale(1.1);
       border-color: #38bdf8;
       box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
     }
@@ -104,27 +121,22 @@
       transform: scale(0.95);
     }
 
-    /* Difficulty & View Controls */
-    .top-controls {
+    .nav-right {
       display: flex;
-      justify-content: space-between;
-      width: 100%;
-      max-width: 800px;
-      margin: 0 auto;
-      gap: 12px;
+      align-items: center;
     }
 
     .btn-pill {
-      background: rgba(15, 23, 42, 0.75);
-      backdrop-filter: blur(8px);
+      background: rgba(30, 41, 59, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.1);
       color: #94a3b8;
       font-size: 13px;
       font-weight: 600;
-      padding: 8px 16px;
-      border-radius: 20px;
+      padding: 7px 14px;
+      border-radius: 16px;
       cursor: pointer;
       transition: all 0.2s;
+      white-space: nowrap;
     }
 
     .btn-pill:hover, .btn-pill.active {
@@ -137,12 +149,12 @@
     /* Footer & Info */
     footer {
       align-self: center;
-      background: rgba(15, 23, 42, 0.65);
+      background: rgba(15, 23, 42, 0.7);
       backdrop-filter: blur(8px);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 12px;
-      padding: 8px 18px;
-      font-size: 13px;
+      padding: 6px 16px;
+      font-size: 12px;
       color: #94a3b8;
       display: flex;
       gap: 16px;
@@ -160,14 +172,31 @@
     .mobile-mode-toggle {
       display: none;
       position: absolute;
-      bottom: 64px;
-      right: 20px;
-      background: rgba(15, 23, 42, 0.85);
+      bottom: 54px;
+      right: 18px;
+      background: rgba(15, 23, 42, 0.9);
       border: 2px solid #38bdf8;
       border-radius: 50px;
-      padding: 6px 14px;
-      gap: 8px;
+      padding: 5px 12px;
+      gap: 6px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    @media (max-width: 860px) {
+      .top-nav {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 12px;
+      }
+      .status-panel {
+        order: -1;
+        width: 100%;
+        justify-content: center;
+      }
+      .nav-left {
+        justify-content: center;
+      }
     }
 
     @media (max-width: 768px) {
@@ -177,10 +206,19 @@
       footer {
         display: none;
       }
+      .stat-box {
+        font-size: 19px;
+        min-width: 62px;
+        padding: 3px 8px;
+      }
+      .btn-pill {
+        font-size: 12px;
+        padding: 5px 10px;
+      }
     }
 
     .mode-option {
-      font-size: 18px;
+      font-size: 16px;
       padding: 6px 12px;
       border-radius: 30px;
       cursor: pointer;
@@ -197,21 +235,22 @@
     /* Toast Notification */
     #toast {
       position: absolute;
-      top: 90px;
+      top: 82px;
       left: 50%;
       transform: translateX(-50%) translateY(-20px);
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15, 23, 42, 0.92);
       border: 1px solid #38bdf8;
       box-shadow: 0 8px 24px rgba(56, 189, 248, 0.3);
       color: #fff;
-      padding: 10px 24px;
-      border-radius: 24px;
+      padding: 9px 22px;
+      border-radius: 20px;
       font-weight: 700;
-      font-size: 16px;
+      font-size: 15px;
       opacity: 0;
       pointer-events: none;
       transition: all 0.3s ease;
       z-index: 20;
+      white-space: nowrap;
     }
 
     #toast.show {
@@ -230,21 +269,27 @@
   <div id="canvas-container"></div>
 
   <div class="ui-layer">
-    <!-- Top row: Difficulty & View reset -->
-    <div class="top-controls">
-      <div class="interactive" style="display: flex; gap: 8px;">
-        <button class="btn-pill active" id="btn-easy" onclick="setDifficulty('easy')">初級 (9×9)</button>
-        <button class="btn-pill" id="btn-medium" onclick="setDifficulty('medium')">中級 (16×16)</button>
+    <!-- Top Navigation Bar: 上部に固定し盤面と被らない配置 -->
+    <div class="top-nav interactive">
+      <!-- 難易度切り替え -->
+      <div class="nav-left">
+        <button class="btn-pill active" id="btn-easy" onclick="setDifficulty('easy')">初級 (9×9 / 💣10)</button>
+        <button class="btn-pill" id="btn-medium" onclick="setDifficulty('medium')">中級 (16×16 / 💣40)</button>
+        <button class="btn-pill" id="btn-hard" onclick="setDifficulty('hard')">上級 (30×16 / 💣99)</button>
       </div>
-      <button class="btn-pill interactive" onclick="resetCamera()">🎯 視点を戻す</button>
-    </div>
 
-    <!-- Center header: Mines count, Reset emoji, Timer -->
-    <header class="interactive">
-      <div class="stat-box" id="mine-count" title="残り地雷数">010</div>
-      <button class="reset-btn" id="face-btn" onclick="startNewGame()" title="リスタート">😊</button>
-      <div class="stat-box" id="timer" title="経過時間">000</div>
-    </header>
+      <!-- 地雷数 / 顔ボタン / タイマー -->
+      <div class="status-panel">
+        <div class="stat-box" id="mine-count" title="残り地雷数">010</div>
+        <button class="reset-btn" id="face-btn" onclick="startNewGame()" title="リスタート">😊</button>
+        <div class="stat-box" id="timer" title="経過時間">000</div>
+      </div>
+
+      <!-- 視点操作 -->
+      <div class="nav-right">
+        <button class="btn-pill" onclick="resetCamera()">🎯 視点を戻す</button>
+      </div>
+    </div>
 
     <!-- Mobile mode toggle -->
     <div class="mobile-mode-toggle interactive" id="mobile-toggle">
@@ -266,8 +311,9 @@
   <script>
     // --- GAME CONFIGURATIONS ---
     const CONFIGS = {
-      easy: { rows: 9, cols: 9, mines: 10, cameraY: 15, cameraZ: 11 },
-      medium: { rows: 16, cols: 16, mines: 40, cameraY: 24, cameraZ: 18 }
+      easy: { rows: 9, cols: 9, mines: 10, cameraY: 15, cameraZ: 12 },
+      medium: { rows: 16, cols: 16, mines: 40, cameraY: 24, cameraZ: 19 },
+      hard: { rows: 16, cols: 30, mines: 99, cameraY: 34, cameraZ: 28 }
     };
 
     let currentDifficulty = 'easy';
@@ -379,7 +425,7 @@
 
       scene = new THREE.Scene();
       scene.background = new THREE.Color(0x0a0f1d);
-      scene.fog = new THREE.FogExp2(0x0a0f1d, 0.025);
+      scene.fog = new THREE.FogExp2(0x0a0f1d, 0.02);
 
       camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
       resetCamera();
@@ -397,28 +443,28 @@
       controls.dampingFactor = 0.06;
       controls.maxPolarAngle = Math.PI / 2.05; // don't go below ground
       controls.minDistance = 5;
-      controls.maxDistance = 60;
+      controls.maxDistance = 120;
 
       // Lights
       const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
       scene.add(ambientLight);
 
       const dirLight = new THREE.DirectionalLight(0xe0f2fe, 0.85);
-      dirLight.position.set(15, 30, 20);
+      dirLight.position.set(20, 45, 30);
       dirLight.castShadow = true;
       dirLight.shadow.mapSize.width = 2048;
       dirLight.shadow.mapSize.height = 2048;
       dirLight.shadow.camera.near = 0.5;
-      dirLight.shadow.camera.far = 80;
-      const d = 16;
+      dirLight.shadow.camera.far = 140;
+      const d = 26; // Covers 30x16 hard board
       dirLight.shadow.camera.left = -d;
       dirLight.shadow.camera.right = d;
       dirLight.shadow.camera.top = d;
       dirLight.shadow.camera.bottom = -d;
       scene.add(dirLight);
 
-      const pointLight = new THREE.PointLight(0x38bdf8, 0.5, 30);
-      pointLight.position.set(0, 10, 0);
+      const pointLight = new THREE.PointLight(0x38bdf8, 0.5, 60);
+      pointLight.position.set(0, 16, 0);
       scene.add(pointLight);
 
       scene.add(boardGroup);
@@ -453,6 +499,7 @@
 
       document.getElementById('btn-easy').classList.toggle('active', diff === 'easy');
       document.getElementById('btn-medium').classList.toggle('active', diff === 'medium');
+      document.getElementById('btn-hard').classList.toggle('active', diff === 'hard');
 
       resetCamera();
       startNewGame();
@@ -551,7 +598,8 @@
         }
       }
 
-      showToast('ゲームスタート！ブロックをクリック');
+      const modeName = currentDifficulty === 'easy' ? '初級' : currentDifficulty === 'medium' ? '中級' : '上級 (💣99)';
+      showToast(`${modeName} スタート！ブロックをクリック`);
     }
 
     // Place mines avoiding first clicked (safeRow, safeCol) and its neighbors
@@ -796,7 +844,7 @@
               item.contentObject = mineObj;
               animateScale(mineObj, 1, 200);
             }, delay);
-            delay += 35;
+            delay = Math.min(delay + (TOTAL_MINES > 50 ? 12 : 30), 1200);
           }
         }
       }
