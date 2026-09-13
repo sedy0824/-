@@ -3,8 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>3D Minesweeper (Three.js)</title>
+  <title>Minesweeper</title>
   <style>
+    :root {
+      --cell-size: 36px;
+      --bg-color: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.85);
+      --border-color: rgba(255, 255, 255, 0.1);
+      --tile-unopened: #334155;
+      --tile-unopened-hover: #475569;
+      --tile-opened: #1e293b;
+      --accent: #38bdf8;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -14,58 +25,34 @@
     }
 
     body {
-      background: radial-gradient(circle at center, #1b2838 0%, #080d14 100%);
+      background: radial-gradient(circle at top, #1e293b 0%, #0a0f1d 100%);
       color: #e2e8f0;
       font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      overflow: hidden;
-      width: 100vw;
-      height: 100vh;
-    }
-
-    #canvas-container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-    }
-
-    /* UI Overlay */
-    .ui-layer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 10;
-      pointer-events: none;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      padding: 12px 16px;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 16px 8px;
+      overflow-x: hidden;
     }
 
-    .interactive {
-      pointer-events: auto;
-    }
-
-    /* Top Navigation Bar: 盤面と被らないよう上端に集約 */
+    /* Top Navigation & Status Bar */
     .top-nav {
       width: 100%;
-      max-width: 1100px;
-      margin: 0 auto;
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      max-width: 900px;
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
       border-radius: 18px;
-      padding: 8px 18px;
+      padding: 10px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-      gap: 12px;
+      gap: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      margin-bottom: 20px;
     }
 
     .nav-left {
@@ -75,20 +62,46 @@
       flex-wrap: wrap;
     }
 
+    .btn-pill {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #94a3b8;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn-pill:hover {
+      color: #fff;
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.15);
+    }
+
+    .btn-pill.active {
+      color: #fff;
+      background: #0284c7;
+      border-color: var(--accent);
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.45);
+    }
+
     /* Status Panel (Mines, Face, Timer) */
     .status-panel {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 16px;
     }
 
     .stat-box {
       font-family: 'Courier New', Courier, monospace;
-      font-size: 22px;
+      font-size: 24px;
       font-weight: 800;
-      color: #38bdf8;
+      color: var(--accent);
       background: rgba(0, 0, 0, 0.5);
-      padding: 4px 10px;
+      padding: 4px 12px;
       border-radius: 8px;
       min-width: 72px;
       text-align: center;
@@ -99,11 +112,11 @@
     .reset-btn {
       background: #1e293b;
       border: 2px solid #475569;
-      font-size: 26px;
+      font-size: 28px;
       cursor: pointer;
       border-radius: 50%;
-      width: 44px;
-      height: 44px;
+      width: 48px;
+      height: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -113,52 +126,109 @@
 
     .reset-btn:hover {
       transform: scale(1.1);
-      border-color: #38bdf8;
-      box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+      border-color: var(--accent);
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
     }
 
     .reset-btn:active {
-      transform: scale(0.95);
+      transform: scale(0.94);
     }
 
-    .nav-right {
+    /* Board Area */
+    .board-container {
+      max-width: 100%;
+      overflow: auto;
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 16px;
+    }
+
+    .board {
+      display: grid;
+      gap: 2px;
+      background: #090e17;
+      padding: 6px;
+      border-radius: 12px;
+      border: 2px solid rgba(56, 189, 248, 0.3);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+      touch-action: manipulation;
+    }
+
+    /* Cells */
+    .cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      background: var(--tile-unopened);
+      border-radius: 4px;
       display: flex;
       align-items: center;
-    }
-
-    .btn-pill {
-      background: rgba(30, 41, 59, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: #94a3b8;
-      font-size: 13px;
-      font-weight: 600;
-      padding: 7px 14px;
-      border-radius: 16px;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 800;
       cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
+      box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.25), inset -1px -1px 0 rgba(0, 0, 0, 0.4);
+      transition: background 0.1s, transform 0.05s;
     }
 
-    .btn-pill:hover, .btn-pill.active {
-      color: #fff;
-      background: #0284c7;
-      border-color: #38bdf8;
-      box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+    .cell:hover:not(.opened):not(.flagged) {
+      background: var(--tile-unopened-hover);
     }
 
-    /* Footer & Info */
+    .cell:active:not(.opened):not(.flagged) {
+      transform: scale(0.96);
+    }
+
+    .cell.opened {
+      background: var(--tile-opened);
+      box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.6);
+      cursor: default;
+    }
+
+    .cell.flagged {
+      color: #ef4444;
+      font-size: 18px;
+    }
+
+    .cell.mine {
+      background: #1e293b;
+      font-size: 18px;
+    }
+
+    .cell.hit {
+      background: #dc2626 !important;
+      animation: shake 0.3s ease-in-out;
+    }
+
+    .cell.wrong-flag {
+      background: #7f1d1d;
+      text-decoration: line-through;
+    }
+
+    /* Number Colors */
+    .cell[data-num="1"] { color: #38bdf8; text-shadow: 0 0 6px rgba(56, 189, 248, 0.4); }
+    .cell[data-num="2"] { color: #4ade80; text-shadow: 0 0 6px rgba(74, 222, 128, 0.4); }
+    .cell[data-num="3"] { color: #f87171; text-shadow: 0 0 6px rgba(248, 113, 113, 0.4); }
+    .cell[data-num="4"] { color: #818cf8; text-shadow: 0 0 6px rgba(129, 140, 248, 0.4); }
+    .cell[data-num="5"] { color: #fb923c; text-shadow: 0 0 6px rgba(251, 146, 60, 0.4); }
+    .cell[data-num="6"] { color: #2dd4bf; text-shadow: 0 0 6px rgba(45, 212, 191, 0.4); }
+    .cell[data-num="7"] { color: #e879f9; text-shadow: 0 0 6px rgba(232, 121, 249, 0.4); }
+    .cell[data-num="8"] { color: #cbd5e1; text-shadow: 0 0 6px rgba(203, 213, 225, 0.4); }
+
+    /* Footer & Controls Guide */
     footer {
-      align-self: center;
-      background: rgba(15, 23, 42, 0.7);
-      backdrop-filter: blur(8px);
+      margin-top: 24px;
+      background: rgba(15, 23, 42, 0.6);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 12px;
-      padding: 6px 16px;
-      font-size: 12px;
+      padding: 8px 18px;
+      font-size: 13px;
       color: #94a3b8;
       display: flex;
       gap: 16px;
-      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
     .badge {
@@ -168,61 +238,25 @@
       color: #e2e8f0;
     }
 
-    /* Mobile action mode toggle (Dig vs Flag) */
+    /* Mobile mode toggle (Dig vs Flag) */
     .mobile-mode-toggle {
       display: none;
-      position: absolute;
-      bottom: 54px;
-      right: 18px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 2px solid #38bdf8;
+      margin-top: 14px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 2px solid var(--accent);
       border-radius: 50px;
-      padding: 5px 12px;
+      padding: 4px 10px;
       gap: 6px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     }
 
-    @media (max-width: 860px) {
-      .top-nav {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 8px;
-        padding: 8px 12px;
-      }
-      .status-panel {
-        order: -1;
-        width: 100%;
-        justify-content: center;
-      }
-      .nav-left {
-        justify-content: center;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .mobile-mode-toggle {
-        display: flex;
-      }
-      footer {
-        display: none;
-      }
-      .stat-box {
-        font-size: 19px;
-        min-width: 62px;
-        padding: 3px 8px;
-      }
-      .btn-pill {
-        font-size: 12px;
-        padding: 5px 10px;
-      }
-    }
-
     .mode-option {
-      font-size: 16px;
-      padding: 6px 12px;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 6px 14px;
       border-radius: 30px;
       cursor: pointer;
-      opacity: 0.5;
+      opacity: 0.55;
       transition: all 0.2s;
     }
 
@@ -234,22 +268,22 @@
 
     /* Toast Notification */
     #toast {
-      position: absolute;
-      top: 82px;
+      position: fixed;
+      top: 85px;
       left: 50%;
       transform: translateX(-50%) translateY(-20px);
-      background: rgba(15, 23, 42, 0.92);
-      border: 1px solid #38bdf8;
-      box-shadow: 0 8px 24px rgba(56, 189, 248, 0.3);
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--accent);
+      box-shadow: 0 8px 24px rgba(56, 189, 248, 0.35);
       color: #fff;
-      padding: 9px 22px;
+      padding: 8px 20px;
       border-radius: 20px;
       font-weight: 700;
-      font-size: 15px;
+      font-size: 14px;
       opacity: 0;
       pointer-events: none;
       transition: all 0.3s ease;
-      z-index: 20;
+      z-index: 50;
       white-space: nowrap;
     }
 
@@ -257,63 +291,97 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-4px); }
+      40%, 80% { transform: translateX(4px); }
+    }
+
+    @media (max-width: 860px) {
+      .top-nav {
+        flex-direction: column;
+        gap: 12px;
+        padding: 10px 14px;
+      }
+      .nav-left {
+        justify-content: center;
+      }
+      .status-panel {
+        order: -1;
+      }
+      .mobile-mode-toggle {
+        display: flex;
+      }
+      footer {
+        display: none;
+      }
+      :root {
+        --cell-size: 30px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      :root {
+        --cell-size: 26px;
+      }
+      .stat-box {
+        font-size: 20px;
+        min-width: 60px;
+        padding: 2px 6px;
+      }
+      .btn-pill {
+        font-size: 11px;
+        padding: 5px 10px;
+      }
+    }
   </style>
-  <!-- Three.js & OrbitControls via CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <!-- Canvas Confetti for winning -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body>
 
-  <div id="canvas-container"></div>
-
-  <div class="ui-layer">
-    <!-- Top Navigation Bar: 上部に固定し盤面と被らない配置 -->
-    <div class="top-nav interactive">
-      <!-- 難易度切り替え -->
-      <div class="nav-left">
-        <button class="btn-pill active" id="btn-easy" onclick="setDifficulty('easy')">初級 (9×9 / 💣10)</button>
-        <button class="btn-pill" id="btn-medium" onclick="setDifficulty('medium')">中級 (16×16 / 💣40)</button>
-        <button class="btn-pill" id="btn-hard" onclick="setDifficulty('hard')">上級 (30×16 / 💣99)</button>
-      </div>
-
-      <!-- 地雷数 / 顔ボタン / タイマー -->
-      <div class="status-panel">
-        <div class="stat-box" id="mine-count" title="残り地雷数">010</div>
-        <button class="reset-btn" id="face-btn" onclick="startNewGame()" title="リスタート">😊</button>
-        <div class="stat-box" id="timer" title="経過時間">000</div>
-      </div>
-
-      <!-- 視点操作 -->
-      <div class="nav-right">
-        <button class="btn-pill" onclick="resetCamera()">🎯 視点を戻す</button>
-      </div>
+  <!-- Top Navigation & Status Bar -->
+  <div class="top-nav">
+    <div class="nav-left">
+      <button class="btn-pill active" id="btn-easy" onclick="setDifficulty('easy')">初級 (9×9 / 💣10)</button>
+      <button class="btn-pill" id="btn-medium" onclick="setDifficulty('medium')">中級 (16×16 / 💣40)</button>
+      <button class="btn-pill" id="btn-hard" onclick="setDifficulty('hard')">上級 (30×16 / 💣99)</button>
     </div>
 
-    <!-- Mobile mode toggle -->
-    <div class="mobile-mode-toggle interactive" id="mobile-toggle">
-      <div class="mode-option active" id="mode-dig" onclick="setMobileMode('dig')" title="掘る">⛏️ 掘る</div>
-      <div class="mode-option" id="mode-flag" onclick="setMobileMode('flag')" title="旗を立てる">🚩 旗</div>
+    <div class="status-panel">
+      <div class="stat-box" id="mine-count" title="残り地雷数">010</div>
+      <button class="reset-btn" id="face-btn" onclick="startNewGame()" title="リスタート">😊</button>
+      <div class="stat-box" id="timer" title="経過時間">000</div>
     </div>
-
-    <!-- Footer Controls Guide -->
-    <footer>
-      <div>🖱️ <span class="badge">左クリック</span> 掘る</div>
-      <div>🚩 <span class="badge">右クリック</span> 旗を立てる / 解除</div>
-      <div>🔄 <span class="badge">ドラッグ</span> 3D視点回転</div>
-      <div>🔍 <span class="badge">ホイール</span> 拡大・縮小</div>
-    </footer>
   </div>
+
+  <!-- Mobile Dig / Flag mode toggle -->
+  <div class="mobile-mode-toggle" id="mobile-toggle">
+    <div class="mode-option active" id="mode-dig" onclick="setMobileMode('dig')" title="掘る">⛏️ 掘る</div>
+    <div class="mode-option" id="mode-flag" onclick="setMobileMode('flag')" title="旗を立てる">🚩 旗</div>
+  </div>
+
+  <!-- Board Area -->
+  <div class="board-container">
+    <div class="board" id="board"></div>
+  </div>
+
+  <!-- Footer Guide -->
+  <footer>
+    <div>🖱️ <span class="badge">左クリック</span> 掘る</div>
+    <div>🚩 <span class="badge">右クリック</span> 旗を立てる / 解除</div>
+    <div>⚡ <span class="badge">数字クリック</span> 周囲を一括オープン（旗の数が一致時）</div>
+  </footer>
 
   <div id="toast"></div>
 
   <script>
-    // --- GAME CONFIGURATIONS ---
+    // --- DIFFICULTY CONFIGURATIONS ---
     const CONFIGS = {
-      easy: { rows: 9, cols: 9, mines: 10, cameraY: 15, cameraZ: 12 },
-      medium: { rows: 16, cols: 16, mines: 40, cameraY: 24, cameraZ: 19 },
-      hard: { rows: 16, cols: 30, mines: 99, cameraY: 34, cameraZ: 28 }
+      easy: { rows: 9, cols: 9, mines: 10 },
+      medium: { rows: 16, cols: 16, mines: 40 },
+      hard: { rows: 16, cols: 30, mines: 99 }
     };
 
     let currentDifficulty = 'easy';
@@ -322,7 +390,7 @@
     let TOTAL_MINES = 10;
 
     // --- GAME STATE ---
-    let grid = []; // 2D array of cell objects
+    let grid = []; // 2D array: { r, c, isMine, isOpen, isFlagged, neighborMines }
     let firstClick = true;
     let gameOver = false;
     let gameWon = false;
@@ -332,165 +400,17 @@
     let timeElapsed = 0;
     let mobileMode = 'dig'; // 'dig' or 'flag'
 
-    // --- THREE.JS GLOBALS ---
-    let scene, camera, renderer, controls;
-    let cellMeshes = []; // 2D array matching grid
-    let raycaster = new THREE.Raycaster();
-    let mouse = new THREE.Vector2();
-    let hoveredCell = null;
-    let boardGroup = new THREE.Group();
-
-    // Mouse click vs drag detection
-    let pointerDownPos = { x: 0, y: 0 };
-    const DRAG_THRESHOLD = 6; // px
-
-    // Colors & Materials
-    const TILE_SIZE = 1.0;
-    const TILE_HEIGHT = 0.4;
-    const TILE_GAP = 0.12;
-
-    const MAT_TILE_TOP = new THREE.MeshStandardMaterial({
-      color: 0x334155,
-      roughness: 0.4,
-      metalness: 0.1
-    });
-    const MAT_TILE_HOVER = new THREE.MeshStandardMaterial({
-      color: 0x475569,
-      roughness: 0.3,
-      metalness: 0.2
-    });
-    const MAT_TILE_OPEN = new THREE.MeshStandardMaterial({
-      color: 0x1e293b,
-      roughness: 0.8,
-      metalness: 0.05
-    });
-    const MAT_BOARD_BASE = new THREE.MeshStandardMaterial({
-      color: 0x0f172a,
-      roughness: 0.7,
-      metalness: 0.3
-    });
-
-    // Number colors for canvas texture
-    const NUMBER_COLORS = [
-      '',
-      '#38bdf8', // 1: Sky Blue
-      '#4ade80', // 2: Green
-      '#f87171', // 3: Red
-      '#818cf8', // 4: Indigo
-      '#fb923c', // 5: Orange
-      '#2dd4bf', // 6: Teal
-      '#e879f9', // 7: Purple
-      '#cbd5e1'  // 8: Light Gray
-    ];
-
-    // Number texture cache
-    const textureCache = {};
-    function getNumberTexture(number) {
-      if (textureCache[number]) return textureCache[number];
-
-      const canvas = document.createElement('canvas');
-      canvas.width = 256;
-      canvas.height = 256;
-      const ctx = canvas.getContext('2d');
-
-      // Tile background
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(0, 0, 256, 256);
-
-      // Inner border
-      ctx.strokeStyle = '#334155';
-      ctx.lineWidth = 12;
-      ctx.strokeRect(6, 6, 244, 244);
-
-      if (number > 0) {
-        ctx.font = 'bold 150px "Segoe UI", Arial, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        // Soft glow shadow
-        ctx.shadowColor = NUMBER_COLORS[number];
-        ctx.shadowBlur = 18;
-        ctx.fillStyle = NUMBER_COLORS[number];
-        ctx.fillText(number.toString(), 128, 134);
-      }
-
-      const texture = new THREE.CanvasTexture(canvas);
-      textureCache[number] = texture;
-      return texture;
-    }
+    // Touch long-press handling
+    let touchTimer = null;
+    let touchPreventClick = false;
 
     // --- INITIALIZATION ---
-    function initThree() {
-      const container = document.getElementById('canvas-container');
-
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x0a0f1d);
-      scene.fog = new THREE.FogExp2(0x0a0f1d, 0.02);
-
-      camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-      resetCamera();
-
-      renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      container.appendChild(renderer.domElement);
-
-      // OrbitControls
-      controls = new THREE.OrbitControls(camera, renderer.domElement);
-      controls.enableDamping = true;
-      controls.dampingFactor = 0.06;
-      controls.maxPolarAngle = Math.PI / 2.05; // don't go below ground
-      controls.minDistance = 5;
-      controls.maxDistance = 120;
-
-      // Lights
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
-      scene.add(ambientLight);
-
-      const dirLight = new THREE.DirectionalLight(0xe0f2fe, 0.85);
-      dirLight.position.set(20, 45, 30);
-      dirLight.castShadow = true;
-      dirLight.shadow.mapSize.width = 2048;
-      dirLight.shadow.mapSize.height = 2048;
-      dirLight.shadow.camera.near = 0.5;
-      dirLight.shadow.camera.far = 140;
-      const d = 26; // Covers 30x16 hard board
-      dirLight.shadow.camera.left = -d;
-      dirLight.shadow.camera.right = d;
-      dirLight.shadow.camera.top = d;
-      dirLight.shadow.camera.bottom = -d;
-      scene.add(dirLight);
-
-      const pointLight = new THREE.PointLight(0x38bdf8, 0.5, 60);
-      pointLight.position.set(0, 16, 0);
-      scene.add(pointLight);
-
-      scene.add(boardGroup);
-
-      // Event Listeners
-      window.addEventListener('resize', onWindowResize);
-      const canvas = renderer.domElement;
-      canvas.addEventListener('pointerdown', onPointerDown);
-      canvas.addEventListener('pointermove', onPointerMove);
-      canvas.addEventListener('pointerup', onPointerUp);
-      canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-
-      animate();
+    function init() {
+      // Prevent context menu on board
+      document.getElementById('board').addEventListener('contextmenu', (e) => e.preventDefault());
+      startNewGame();
     }
 
-    function resetCamera() {
-      const cfg = CONFIGS[currentDifficulty];
-      camera.position.set(0, cfg.cameraY, cfg.cameraZ);
-      camera.lookAt(0, 0, 0);
-      if (controls) {
-        controls.target.set(0, 0, 0);
-        controls.update();
-      }
-    }
-
-    // --- GAME CREATION & BOARD SETUP ---
     function setDifficulty(diff) {
       currentDifficulty = diff;
       ROWS = CONFIGS[diff].rows;
@@ -501,7 +421,6 @@
       document.getElementById('btn-medium').classList.toggle('active', diff === 'medium');
       document.getElementById('btn-hard').classList.toggle('active', diff === 'hard');
 
-      resetCamera();
       startNewGame();
     }
 
@@ -512,7 +431,6 @@
     }
 
     function startNewGame() {
-      // Clear timers
       clearInterval(timerInterval);
       timerInterval = null;
       timeElapsed = 0;
@@ -526,13 +444,7 @@
       updateMineDisplay();
       setFace('😊');
 
-      // Clear existing 3D board
-      while (boardGroup.children.length > 0) {
-        const obj = boardGroup.children[0];
-        boardGroup.remove(obj);
-      }
-
-      // Initialize Grid Data
+      // Setup Grid Data
       grid = [];
       for (let r = 0; r < ROWS; r++) {
         grid[r] = [];
@@ -547,69 +459,42 @@
         }
       }
 
-      // Build 3D Board
-      cellMeshes = [];
-      const totalWidth = COLS * TILE_SIZE + (COLS - 1) * TILE_GAP;
-      const totalDepth = ROWS * TILE_SIZE + (ROWS - 1) * TILE_GAP;
-      const startX = -totalWidth / 2 + TILE_SIZE / 2;
-      const startZ = -totalDepth / 2 + TILE_SIZE / 2;
-
-      // Base tray mesh
-      const baseGeo = new THREE.BoxGeometry(totalWidth + 0.6, 0.4, totalDepth + 0.6);
-      const baseMesh = new THREE.Mesh(baseGeo, MAT_BOARD_BASE);
-      baseMesh.position.y = -0.22;
-      baseMesh.receiveShadow = true;
-      boardGroup.add(baseMesh);
-
-      // Border glow rim
-      const edgeGeo = new THREE.EdgesGeometry(baseGeo);
-      const edgeMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, linewidth: 2 });
-      const edgeLine = new THREE.LineSegments(edgeGeo, edgeMat);
-      edgeLine.position.copy(baseMesh.position);
-      boardGroup.add(edgeLine);
-
-      // Tile Geometry (Box)
-      const tileGeo = new THREE.BoxGeometry(TILE_SIZE, TILE_HEIGHT, TILE_SIZE);
+      // Render Board DOM
+      const boardEl = document.getElementById('board');
+      boardEl.innerHTML = '';
+      boardEl.style.gridTemplateColumns = `repeat(${COLS}, var(--cell-size))`;
 
       for (let r = 0; r < ROWS; r++) {
-        cellMeshes[r] = [];
         for (let c = 0; c < COLS; c++) {
-          const posX = startX + c * (TILE_SIZE + TILE_GAP);
-          const posZ = startZ + r * (TILE_SIZE + TILE_GAP);
+          const cellEl = document.createElement('div');
+          cellEl.className = 'cell';
+          cellEl.id = `cell-${r}-${c}`;
+          cellEl.dataset.r = r;
+          cellEl.dataset.c = c;
 
-          // Tile group to handle animations & attachments (numbers, flags, mines)
-          const tileHolder = new THREE.Group();
-          tileHolder.position.set(posX, TILE_HEIGHT / 2, posZ);
+          // Mouse Listeners
+          cellEl.addEventListener('mousedown', (e) => onCellMouseDown(e, r, c));
+          cellEl.addEventListener('mouseup', (e) => onCellMouseUp(e, r, c));
 
-          const mesh = new THREE.Mesh(tileGeo, MAT_TILE_TOP.clone());
-          mesh.castShadow = true;
-          mesh.receiveShadow = true;
-          mesh.userData = { r, c };
+          // Touch Listeners (Mobile friendly long press for flag)
+          cellEl.addEventListener('touchstart', (e) => onCellTouchStart(e, r, c), { passive: true });
+          cellEl.addEventListener('touchend', (e) => onCellTouchEnd(e, r, c));
 
-          tileHolder.add(mesh);
-          boardGroup.add(tileHolder);
-
-          cellMeshes[r][c] = {
-            holder: tileHolder,
-            mesh: mesh,
-            initialY: TILE_HEIGHT / 2,
-            contentObject: null
-          };
+          boardEl.appendChild(cellEl);
         }
       }
 
       const modeName = currentDifficulty === 'easy' ? '初級' : currentDifficulty === 'medium' ? '中級' : '上級 (💣99)';
-      showToast(`${modeName} スタート！ブロックをクリック`);
+      showToast(`${modeName} スタート！マスをクリック`);
     }
 
-    // Place mines avoiding first clicked (safeRow, safeCol) and its neighbors
+    // Place mines with safe 3x3 zone around initial click
     function placeMines(safeRow, safeCol) {
       let placed = 0;
       while (placed < TOTAL_MINES) {
         const r = Math.floor(Math.random() * ROWS);
         const c = Math.floor(Math.random() * COLS);
 
-        // Keep 3x3 area around first click safe
         const isNearSafe = Math.abs(r - safeRow) <= 1 && Math.abs(c - safeCol) <= 1;
         if (!grid[r][c].isMine && !isNearSafe) {
           grid[r][c].isMine = true;
@@ -617,7 +502,7 @@
         }
       }
 
-      // Calculate neighbor mines
+      // Calculate neighbors
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
           if (grid[r][c].isMine) continue;
@@ -636,11 +521,20 @@
       }
     }
 
-    // --- GAMEPLAY ACTIONS ---
+    // --- ACTIONS ---
     function revealCell(r, c) {
       if (gameOver || gameWon) return;
       const cell = grid[r][c];
-      if (cell.isOpen || cell.isFlagged) return;
+
+      // If already open with a number, perform "Chord" (quick open neighbors if flags match)
+      if (cell.isOpen) {
+        if (cell.neighborMines > 0) {
+          chordCell(r, c);
+        }
+        return;
+      }
+
+      if (cell.isFlagged) return;
 
       if (firstClick) {
         firstClick = false;
@@ -649,14 +543,13 @@
       }
 
       if (cell.isMine) {
-        // Mine hit!
         handleGameOver(r, c);
         return;
       }
 
-      openSingleCell(r, c);
+      openCell(r, c);
 
-      // Auto-expand empty cells (Flood Fill)
+      // Flood fill if empty cell
       if (cell.neighborMines === 0) {
         const queue = [[r, c]];
         while (queue.length > 0) {
@@ -668,7 +561,7 @@
               if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
                 const neighbor = grid[nr][nc];
                 if (!neighbor.isOpen && !neighbor.isFlagged && !neighbor.isMine) {
-                  openSingleCell(nr, nc);
+                  openCell(nr, nc);
                   if (neighbor.neighborMines === 0) {
                     queue.push([nr, nc]);
                   }
@@ -682,28 +575,51 @@
       checkWinCondition();
     }
 
-    function openSingleCell(r, c) {
+    function openCell(r, c) {
       const cell = grid[r][c];
       if (cell.isOpen) return;
       cell.isOpen = true;
       revealedCount++;
 
-      const item = cellMeshes[r][c];
-      const mesh = item.mesh;
+      const el = document.getElementById(`cell-${r}-${c}`);
+      el.classList.add('opened');
 
-      // Animate tile sinking down slightly to indicate pressed state
-      item.holder.position.y = item.initialY - 0.16;
+      if (cell.neighborMines > 0) {
+        el.textContent = cell.neighborMines;
+        el.dataset.num = cell.neighborMines;
+      } else {
+        el.textContent = '';
+      }
+    }
 
-      // Update materials
-      const tex = getNumberTexture(cell.neighborMines);
-      mesh.material = [
-        MAT_TILE_OPEN, // right
-        MAT_TILE_OPEN, // left
-        new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6 }), // top
-        MAT_TILE_OPEN, // bottom
-        MAT_TILE_OPEN, // front
-        MAT_TILE_OPEN  // back
-      ];
+    // Chord: open surrounding unopened non-flagged cells if flag count matches neighborMines
+    function chordCell(r, c) {
+      const cell = grid[r][c];
+      let flagCount = 0;
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          const nr = r + dr;
+          const nc = c + dc;
+          if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && grid[nr][nc].isFlagged) {
+            flagCount++;
+          }
+        }
+      }
+
+      if (flagCount === cell.neighborMines) {
+        for (let dr = -1; dr <= 1; dr++) {
+          for (let dc = -1; dc <= 1; dc++) {
+            const nr = r + dr;
+            const nc = c + dc;
+            if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+              const neighbor = grid[nr][nc];
+              if (!neighbor.isOpen && !neighbor.isFlagged) {
+                revealCell(nr, nc);
+              }
+            }
+          }
+        }
+      }
     }
 
     function toggleFlag(r, c) {
@@ -712,139 +628,44 @@
       if (cell.isOpen) return;
 
       cell.isFlagged = !cell.isFlagged;
-      const item = cellMeshes[r][c];
+      const el = document.getElementById(`cell-${r}-${c}`);
 
       if (cell.isFlagged) {
         flaggedCount++;
-        // Create 3D flag model on top
-        const flagObj = create3DFlag();
-        flagObj.position.set(0, TILE_HEIGHT / 2, 0);
-        item.holder.add(flagObj);
-        item.contentObject = flagObj;
-
-        // Pop animation
-        flagObj.scale.set(0.1, 0.1, 0.1);
-        animateScale(flagObj, 1, 150);
+        el.classList.add('flagged');
+        el.textContent = '🚩';
       } else {
         flaggedCount--;
-        if (item.contentObject) {
-          item.holder.remove(item.contentObject);
-          item.contentObject = null;
-        }
+        el.classList.remove('flagged');
+        el.textContent = '';
       }
 
       updateMineDisplay();
     }
 
-    // --- 3D ASSETS BUILDERS ---
-    function create3DFlag() {
-      const flagGroup = new THREE.Group();
-
-      // Pole
-      const poleGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.6, 12);
-      const poleMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.8, roughness: 0.2 });
-      const pole = new THREE.Mesh(poleGeo, poleMat);
-      pole.position.y = 0.3;
-      pole.castShadow = true;
-      flagGroup.add(pole);
-
-      // Flag banner (triangle)
-      const flagShape = new THREE.Shape();
-      flagShape.moveTo(0, 0);
-      flagShape.lineTo(0.35, 0.15);
-      flagShape.lineTo(0, 0.3);
-      flagShape.closePath();
-
-      const extrudeSettings = { depth: 0.02, bevelEnabled: false };
-      const bannerGeo = new THREE.ExtrudeGeometry(flagShape, extrudeSettings);
-      const bannerMat = new THREE.MeshStandardMaterial({
-        color: 0xef4444,
-        roughness: 0.3,
-        emissive: 0x991b1b,
-        emissiveIntensity: 0.4
-      });
-      const banner = new THREE.Mesh(bannerGeo, bannerMat);
-      banner.position.set(0.02, 0.3, -0.01);
-      banner.castShadow = true;
-      flagGroup.add(banner);
-
-      return flagGroup;
-    }
-
-    function create3DMine() {
-      const mineGroup = new THREE.Group();
-
-      // Core sphere
-      const sphereGeo = new THREE.SphereGeometry(0.24, 16, 16);
-      const mineMat = new THREE.MeshStandardMaterial({
-        color: 0x111827,
-        metalness: 0.9,
-        roughness: 0.2
-      });
-      const sphere = new THREE.Mesh(sphereGeo, mineMat);
-      sphere.position.y = 0.28;
-      sphere.castShadow = true;
-      mineGroup.add(sphere);
-
-      // Spikes
-      const spikeMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xb91c1c, emissiveIntensity: 0.5 });
-      const spikeGeo = new THREE.CylinderGeometry(0.02, 0.06, 0.55, 8);
-
-      const angles = [
-        [0, 0, 0],
-        [Math.PI / 2, 0, 0],
-        [0, 0, Math.PI / 2],
-        [Math.PI / 4, Math.PI / 4, 0],
-        [-Math.PI / 4, Math.PI / 4, 0]
-      ];
-
-      angles.forEach(rot => {
-        const spike = new THREE.Mesh(spikeGeo, spikeMat);
-        spike.position.y = 0.28;
-        spike.rotation.set(rot[0], rot[1], rot[2]);
-        spike.castShadow = true;
-        mineGroup.add(spike);
-      });
-
-      return mineGroup;
-    }
-
-    // --- GAME OVER & WIN LOGIC ---
-    function handleGameOver(hitRow, hitCol) {
+    function handleGameOver(hitR, hitC) {
       gameOver = true;
       clearInterval(timerInterval);
       setFace('😵');
       showToast('💥 地雷を踏んでしまった！ゲームオーバー');
 
-      // Reveal all mines with staggered explosion effect
-      let delay = 0;
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
-          if (grid[r][c].isMine) {
-            const item = cellMeshes[r][c];
-            setTimeout(() => {
-              if (r === hitRow && c === hitCol) {
-                // Hit tile red
-                item.mesh.material = new THREE.MeshStandardMaterial({
-                  color: 0xdc2626,
-                  emissive: 0x991b1b,
-                  emissiveIntensity: 0.7
-                });
-              } else {
-                item.mesh.material = MAT_TILE_OPEN;
-              }
+          const cell = grid[r][c];
+          const el = document.getElementById(`cell-${r}-${c}`);
 
-              // Remove flag if present
-              if (item.contentObject) {
-                item.holder.remove(item.contentObject);
-              }
-
-              const mineObj = create3DMine();
-              item.holder.add(mineObj);
-              item.contentObject = mineObj;
-              animateScale(mineObj, 1, 200);
-            }, delay);
-            delay = Math.min(delay + (TOTAL_MINES > 50 ? 12 : 30), 1200);
+          if (cell.isMine) {
+            if (r === hitR && c === hitC) {
+              el.classList.add('hit');
+            }
+            if (!cell.isFlagged) {
+              el.classList.add('mine');
+              el.textContent = '💣';
+            }
+          } else if (cell.isFlagged) {
+            // Wrong flag
+            el.classList.add('wrong-flag');
+            el.textContent = '❌';
           }
         }
       }
@@ -858,32 +679,63 @@
         setFace('😎');
         showToast('🎉 クリアおめでとうございます！');
 
-        // Trigger celebratory confetti
+        // Flag all remaining mines
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            if (grid[r][c].isMine && !grid[r][c].isFlagged) {
+              const el = document.getElementById(`cell-${r}-${c}`);
+              el.classList.add('flagged');
+              el.textContent = '🚩';
+            }
+          }
+        }
+        flaggedCount = TOTAL_MINES;
+        updateMineDisplay();
+
+        // Confetti celebration
         if (window.confetti) {
-          confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
-          setTimeout(() => {
-            confetti({ particleCount: 80, angle: 60, spread: 55, origin: { x: 0 } });
-            confetti({ particleCount: 80, angle: 120, spread: 55, origin: { x: 1 } });
-          }, 300);
+          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+          setTimeout(() => confetti({ particleCount: 60, spread: 90, origin: { y: 0.4 } }), 250);
         }
       }
     }
 
-    // Simple scale tween helper
-    function animateScale(obj, targetScale, duration) {
-      const startTime = performance.now();
-      const startScale = obj.scale.x;
-      function step(now) {
-        const progress = Math.min((now - startTime) / duration, 1);
-        const ease = 1 - Math.pow(1 - progress, 3);
-        const s = startScale + (targetScale - startScale) * ease;
-        obj.scale.set(s, s, s);
-        if (progress < 1) requestAnimationFrame(step);
-      }
-      requestAnimationFrame(step);
+    // --- MOUSE & TOUCH EVENT HANDLERS ---
+    function onCellMouseDown(e, r, c) {
+      if (!gameOver && !gameWon) setFace('😮');
     }
 
-    // --- UI UPDATES ---
+    function onCellMouseUp(e, r, c) {
+      if (!gameOver && !gameWon) setFace('😊');
+
+      if (e.button === 2) {
+        // Right Click: Flag
+        toggleFlag(r, c);
+      } else if (e.button === 0) {
+        // Left Click: Dig (or Flag in mobile flag mode)
+        if (mobileMode === 'flag') {
+          toggleFlag(r, c);
+        } else {
+          revealCell(r, c);
+        }
+      }
+    }
+
+    function onCellTouchStart(e, r, c) {
+      touchPreventClick = false;
+      touchTimer = setTimeout(() => {
+        touchPreventClick = true;
+        toggleFlag(r, c);
+        if (navigator.vibrate) navigator.vibrate(40);
+      }, 400); // 400ms long-press to flag
+    }
+
+    function onCellTouchEnd(e, r, c) {
+      if (touchTimer) clearTimeout(touchTimer);
+      if (touchPreventClick) return; // handled by long-press
+    }
+
+    // --- UI HELPERS ---
     function setFace(emoji) {
       document.getElementById('face-btn').textContent = emoji;
     }
@@ -911,121 +763,11 @@
       const toast = document.getElementById('toast');
       toast.textContent = msg;
       toast.classList.add('show');
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 2500);
-    }
-
-    // --- EVENT HANDLERS & RAYCASTING ---
-    function onPointerDown(e) {
-      pointerDownPos = { x: e.clientX, y: e.clientY };
-      if (!gameOver && !gameWon) setFace('😮');
-    }
-
-    function onPointerMove(e) {
-      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const meshes = [];
-      for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS; c++) {
-          if (!grid[r][c].isOpen) {
-            meshes.push(cellMeshes[r][c].mesh);
-          }
-        }
-      }
-
-      const intersects = raycaster.intersectObjects(meshes);
-
-      if (intersects.length > 0) {
-        const targetMesh = intersects[0].object;
-        const { r, c } = targetMesh.userData;
-        const cell = grid[r][c];
-
-        if (hoveredCell !== cellMeshes[r][c]) {
-          resetHover();
-          if (!cell.isOpen) {
-            hoveredCell = cellMeshes[r][c];
-            // Slight lift effect
-            hoveredCell.holder.position.y = hoveredCell.initialY + 0.08;
-            if (!cell.isFlagged) {
-              hoveredCell.mesh.material = MAT_TILE_HOVER;
-            }
-          }
-        }
-      } else {
-        resetHover();
-      }
-    }
-
-    function resetHover() {
-      if (hoveredCell) {
-        const { r, c } = hoveredCell.mesh.userData;
-        const cell = grid[r][c];
-        hoveredCell.holder.position.y = hoveredCell.initialY;
-        if (!cell.isOpen && !cell.isFlagged) {
-          hoveredCell.mesh.material = MAT_TILE_TOP;
-        }
-        hoveredCell = null;
-      }
-    }
-
-    function onPointerUp(e) {
-      if (!gameOver && !gameWon) setFace('😊');
-
-      const dist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
-      if (dist > DRAG_THRESHOLD) {
-        // Was a camera drag rotation, not a click
-        return;
-      }
-
-      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const meshes = [];
-      for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS; c++) {
-          meshes.push(cellMeshes[r][c].mesh);
-        }
-      }
-
-      const intersects = raycaster.intersectObjects(meshes);
-      if (intersects.length > 0) {
-        const hit = intersects[0].object;
-        const { r, c } = hit.userData;
-
-        // Right click OR (mobile mode flag)
-        const isRightClick = e.button === 2;
-        const isFlagAction = isRightClick || (mobileMode === 'flag');
-
-        if (isFlagAction) {
-          toggleFlag(r, c);
-        } else {
-          revealCell(r, c);
-        }
-      }
-    }
-
-    function onWindowResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-
-    // --- ANIMATION LOOP ---
-    function animate() {
-      requestAnimationFrame(animate);
-      if (controls) controls.update();
-      renderer.render(scene, camera);
+      setTimeout(() => toast.classList.remove('show'), 2200);
     }
 
     // Start on page load
-    window.addEventListener('DOMContentLoaded', () => {
-      initThree();
-      startNewGame();
-    });
+    window.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html>
